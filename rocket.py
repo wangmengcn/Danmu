@@ -2,6 +2,8 @@
 import socket
 import time
 import re
+from pymongo import MongoClient
+
 
 '''这里要注意几个变量： host port roomid gid '''
 
@@ -31,6 +33,13 @@ def get_rocket(data):
         recver_id = re.search('\/dn@=(.+?)\/', data).group(1)
         recver_room = re.search('\/drid@=(.+?)\/', data).group(1)
         gift = re.search('\/gn@=(.+?)\/', data).group(1)
+        rocketmsg = {}
+        rocketmsg["sender_id"] = sender_id
+        rocketmsg["recver_id"] = recver_id
+        rocketmsg["recver_room"] = recver_room
+        rocketmsg["gift"] = gift
+        rocketmsg["date"] = time.time()
+        col.insert_one(rocketmsg, bypass_document_validation=False)
         print sender_id, "送给房间号为:", recver_room, "的", recver_id, "一个",\
             gift, "<", time.strftime(
                 '%H-%I-%M', time.localtime(time.time())), ">"
@@ -47,32 +56,42 @@ def get_chatmsg(data):
         sender_id = re.search('\/nn@=(.+?)\/', data).group(1)
         chatmsg = sender_id
         sender_content = re.search('\/txt@=(.+?)\/', data).group(1)
+
         print chatmsg, "said:", sender_content, "at:<", time.strftime('%H-%I-%M', time.localtime(time.time())), ">"
     except Exception, e:
         print "error occur:", repr(data)
     finally:
         pass
 
-
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((HOST, PORT))
 s.sendall(tranMsg(LOGIN_INFO))
-data = s.recv(1024)
-print repr(data)
 s.sendall(tranMsg(JION_GROUP))
 
 
 sendlive = 0
+client = MongoClient()
+db = client["Douyu"]
+col = db["rocket"]
+print "已连接至数据库"
 while True:
-    if sendlive % 20 == 0:
+    if sendlive % 2 == 0:
         print "----------------------------------Keep Alive----------------------------------"
-        s.sendall(tranMsg(KEEP_ALIVE))
+        try:
+            s.sendall(tranMsg(KEEP_ALIVE))
+        except Exception, e:
+            raise e        
     sendlive += 1
+    print sendlive
+    try:  
+        data = s.recv(1000)
+        strdata = repr(data)
+        if "type@=spbc" in strdata:
+            get_rocket(data)
+        if "type@=chatmsg" in strdata:
+            get_chatmsg(data)
+    except Exception, e:
+        raise e
     time.sleep(1)
-    data = s.recv(4000)
-    strdata = repr(data)
-    if "type@=chatmsg" in strdata:
-        get_chatmsg(data)
-    elif "type@=spbc" in strdata:
-        get_rocket(data)
-s.close()
+
+#s.close()
