@@ -54,10 +54,13 @@ def get_rocket(data):
 def get_chatmsg(data):
     try:
         sender_id = re.search('\/nn@=(.+?)\/', data).group(1)
-        chatmsg = sender_id
         sender_content = re.search('\/txt@=(.+?)\/', data).group(1)
-
-        print chatmsg, "said:", sender_content, "at:<", time.strftime('%H-%I-%M', time.localtime(time.time())), ">"
+        chatmsg = {}
+        chatmsg["sender_id"] = sender_id
+        chatmsg["content"] = sender_content
+        chatmsg["date"] = time.time()
+        chatcol.insert_one(chatmsg, bypass_document_validation=False)
+        print sender_id, "said:", sender_content, "at:<", time.strftime('%H-%I-%M', time.localtime(time.time())), ">"
     except Exception, e:
         print "error occur:", repr(data)
     finally:
@@ -73,6 +76,7 @@ sendlive = 0
 client = MongoClient()
 db = client["Douyu"]
 col = db["rocket"]
+chatcol = db["chatmsg"]
 print "已连接至数据库"
 while True:
     if sendlive % 2 == 0:
@@ -80,10 +84,10 @@ while True:
         try:
             s.sendall(tranMsg(KEEP_ALIVE))
         except Exception, e:
-            raise e        
+            raise e
     sendlive += 1
     print sendlive
-    try:  
+    try:
         data = s.recv(1000)
         strdata = repr(data)
         if "type@=spbc" in strdata:
@@ -94,4 +98,4 @@ while True:
         raise e
     time.sleep(1)
 
-#s.close()
+# s.close()
