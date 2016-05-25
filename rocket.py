@@ -9,7 +9,7 @@ from pymongo import MongoClient
 
 HOST = '124.95.174.146'
 PORT = 8601
-RID = 319721
+RID = 525207
 LOGIN_INFO = "type@=loginreq/username@=qq_aPSMdfM5" + \
     "/password@=1234567890123456/roomid@="+str(RID) + "/"
 JION_GROUP = "type@=joingroup/rid@="+str(RID) + "/gid@=-9999" + "/"
@@ -80,7 +80,7 @@ col = db["rocket"]
 chatcol = db["chatmsg"]
 print "已连接至数据库"
 while True:
-    if sendlive % 2 == 0:
+    if sendlive % 20 == 0:
         print "----------------------------------Keep Alive----------------------------------"
         try:
             s.sendall(tranMsg(KEEP_ALIVE))
@@ -89,7 +89,7 @@ while True:
     sendlive += 1
     print sendlive
     try:
-        data = s.recv(1000)
+        data = s.recv(4000)
         if data:
             strdata = repr(data)
             if "type@=spbc" in strdata:
