@@ -4,19 +4,21 @@ import socket
 import time
 import re
 from pymongo import MongoClient
+import pymongo
 
 
 '''这里要注意几个变量： host port roomid gid '''
 
-HOST = '124.95.174.146'
+HOST = 'openbarrage.douyutv.com'
 PORT = 8601
 RID = 97376
 LOGIN_INFO = "type@=loginreq/username@=qq_aPSMdfM5" + \
-    "/password@=1234567890123456/roomid@="+str(RID) + "/"
-JION_GROUP = "type@=joingroup/rid@="+str(RID) + "/gid@=-9999" + "/"
-ROOM_ID = "type@=qrl/rid@="+str(RID) + "/"
+    "/password@=1234567890123456/roomid@=" + str(RID) + "/"
+JION_GROUP = "type@=joingroup/rid@=" + str(RID) + "/gid@=-9999" + "/"
+ROOM_ID = "type@=qrl/rid@=" + str(RID) + "/"
 KEEP_ALIVE = "type@=keeplive/tick@=" + \
     str(int(time.time())) + "/vbw@=0/k@=19beba41da8ac2b4c7895a66cab81e23/"
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
 def tranMsg(content):
@@ -68,37 +70,82 @@ def get_chatmsg(data):
     finally:
         pass
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((HOST, PORT))
-s.sendall(tranMsg(LOGIN_INFO))
-s.sendall(tranMsg(JION_GROUP))
+
+def insert_msg(sock):
+    sendtime = 0
+    while True:
+        if sendtime % 20 == 0:
+            print "----------Keep Alive---------"
+            try:
+                sock.sendall(tranMsg(KEEP_ALIVE))
+            except socket.error:
+                print "alive error"
+                sock = create_Conn()
+                insert_msg(sock)
+        sendtime += 1
+        print sendtime
+        try:
+            data = sock.recv(4000)
+            if data:
+                strdata = repr(data)
+                if "type@=spbc" in strdata:
+                    get_rocket(data)
+                if "type@=chatmsg" in strdata:
+                    get_chatmsg(data)
+        except socket.error:
+            print "chat error"
+            sock = create_Conn()
+            insert_msg(sock)
+        time.sleep(1)
 
 
-sendlive = 0
+
+
+
+def create_Conn():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((HOST, PORT))
+    RID = get_Hotroom()
+    print "当前最热房间:", RID
+    LOGIN_INFO = "type@=loginreq/username@=qq_aPSMdfM5" + \
+    "/password@=1234567890123456/roomid@=" + str(RID) + "/"
+    print LOGIN_INFO
+    JION_GROUP = "type@=joingroup/rid@=" + str(RID) + "/gid@=-9999" + "/"
+    print JION_GROUP
+    s.sendall(tranMsg(LOGIN_INFO))
+    s.sendall(tranMsg(JION_GROUP))
+    return s
+
+def false_Conn():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((HOST, PORT))
+        RID = 110
+        print "当前最热房间:", RID
+        LOGIN_INFO = "type@=loginreq/username@=qq_aPSMdfM5" + \
+        "/password@=1234567890123456/roomid@=" + str(RID) + "/"
+        print LOGIN_INFO
+        JION_GROUP = "type@=joingroup/rid@=" + str(RID) + "/gid@=-9999" + "/"
+        print JION_GROUP
+        s.sendall(tranMsg(LOGIN_INFO))
+        s.sendall(tranMsg(JION_GROUP))
+    except:
+        pass
+    return s
+
+
+def get_Hotroom():
+    hotroom = roomcol.find().limit(1).sort(
+        [("audience", pymongo.DESCENDING), ("date", pymongo.DESCENDING)])
+    for item in hotroom:
+        return item["roomid"]
+
 client = MongoClient()
 db = client["Douyu"]
 col = db["rocket"]
 chatcol = db["chatmsg"]
+roomcol = db["Roominfo"]
 print "已连接至数据库"
-while True:
-    if sendlive % 20 == 0:
-        print "----------------------------------Keep Alive----------------------------------"
-        try:
-            s.sendall(tranMsg(KEEP_ALIVE))
-        except Exception, e:
-            raise e
-    sendlive += 1
-    print sendlive
-    try:
-        data = s.recv(4000)
-        if data:
-            strdata = repr(data)
-            if "type@=spbc" in strdata:
-                get_rocket(data)
-            if "type@=chatmsg" in strdata:
-                get_chatmsg(data)
-    except Exception, e:
-        raise e
-    time.sleep(1)
 
-# s.close()
+s = create_Conn()
+insert_msg(s)

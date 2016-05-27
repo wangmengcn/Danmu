@@ -86,6 +86,4 @@ def insert_info():
         get_roominfo(gamedata)
 # get_roominfo(pagecontent)
 
-while True:
-    insert_info()
-    time.sleep(60)
+insert_info()

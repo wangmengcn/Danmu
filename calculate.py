@@ -3,7 +3,7 @@
 from pymongo import MongoClient
 import time
 
-cli = MongoClient()
+cli = MongoClient(host="123.206.211.77")
 db = cli["Douyu"]
 col = db["rocket"]
 
@@ -29,8 +29,7 @@ def sortNames(data, key):
 def giftTime(data):
     sortdate = {}
     for rocket in data:
-        hour = time.strftime("%H",time.localtime(float(rocket["date"])))
-        print hour
+        hour = time.strftime("%H", time.localtime(float(rocket["date"])))
         if str(hour) not in sortdate.keys():
             sortdate[str(hour)] = 1
         else:
@@ -43,5 +42,11 @@ sortsender = sortNames(senderrows, "sender_id")
 sortrecver = sortNames(recverrows, "recver_id")
 sorthour = giftTime(timerows)
 
+for item in sortsender:
+    print item[0], "送出", item[1]
+
+for item in sortrecver:
+    print item[0], "收到", item[1]
+
 for item in sorthour:
-	print item
+    print item
