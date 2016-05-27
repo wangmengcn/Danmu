@@ -1,4 +1,5 @@
 #-*- coding: UTF-8 -*-
+# 获取实时火箭数量
 import socket
 import time
 import re
@@ -9,7 +10,7 @@ from pymongo import MongoClient
 
 HOST = '124.95.174.146'
 PORT = 8601
-RID = 525207
+RID = 97376
 LOGIN_INFO = "type@=loginreq/username@=qq_aPSMdfM5" + \
     "/password@=1234567890123456/roomid@="+str(RID) + "/"
 JION_GROUP = "type@=joingroup/rid@="+str(RID) + "/gid@=-9999" + "/"

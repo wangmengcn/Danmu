@@ -1,4 +1,5 @@
 #-*- coding: UTF-8 -*-
+# 用以统计火箭分布信息
 from pymongo import MongoClient
 import time
 
