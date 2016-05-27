@@ -3,6 +3,7 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from pymongo import MongoClient
 import json
+from serverEnd import dataSender
 
 PORT_NUMBER = 8888
 client = MongoClient(host="123.206.211.77")
@@ -15,7 +16,7 @@ class myHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.send_header('Content-type', 'json/html')
-        self.send_header('Access-Control-Allow-Origin','*')
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         rocket = col.count()
         msg = msgcol.count()
@@ -23,7 +24,14 @@ class myHandler(BaseHTTPRequestHandler):
             "rocket": rocket,
             "msg": msg
         }
-        self.wfile.write(msg)
+        name = dataSender.name
+        value = dataSender.value
+        result = {}
+        times = 0
+        while times < len(name):
+            result[name[times]] = value[times]
+            times += 1
+        self.wfile.write(json.dumps(result))
         return
 
 try:
