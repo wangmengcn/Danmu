@@ -33,7 +33,7 @@ col = db["Roominfo"]
 
 def get_roominfo(data):
     if data:
-        firstpage = BeautifulSoup(data, "html5lib")
+        firstpage = BeautifulSoup(data)
         roomlist = firstpage.select('li')
         print len(roomlist)
         if roomlist:
@@ -76,7 +76,7 @@ def get_roominfo(data):
 def insert_info():
     session = requests.session()
     pagecontent = session.get(Directory_url).text
-    pagesoup = BeautifulSoup(pagecontent, "html5lib")
+    pagesoup = BeautifulSoup(pagecontent)
     games = pagesoup.select('a')
     for game in games:
         links = game["href"]
@@ -86,6 +86,4 @@ def insert_info():
         get_roominfo(gamedata)
 # get_roominfo(pagecontent)
 
-while True:
-    insert_info()
-    time.sleep(60)
+insert_info()
