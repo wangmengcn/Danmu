@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" http-equiv="Access-Control-Allow-Origin" content="*.json">
+	<script src="echarts.min.js" type="text/javascript"></script>
+    <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.2.3.min.js" type="text/javascript"></script>
+</head>
+<body>
+	<!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="container" style="width: 600px;height:400px;"></div>
+    <script type="text/javascript" >
+        var dom = document.getElementById("container");
+        var myChart = echarts.init(dom);
+        var app = {};
+        var jsondata;
+        option = null;
+        var base = new Date();
+
+        var oneDay = 24 * 3600 * 1000;
+        var date = [];
+
+        var data = [Math.random() * 150];
+        
+
+        function addData(shift) {
+            var now = new Date();
+            now = [now.getHours(), now.getMinutes(), now.getSeconds()].join('-');
+            $.get( "http://localhost:8000", function( data ) {
+                jsondata = data;
+            });
+            jsondata =parseInt(jsondata)
+            date.push(now);
+            data.push(jsondata);
+            if (shift) {
+                date.shift();
+                data.shift();
+            }
+        }
+
+        for (var i = 1; i < 100; i++) {
+            addData();
+        }
+
+        option = {
+            title: {
+                text: '斗鱼礼物数量',
+                subtext: '火箭数量',
+                left: 'center'
+            },
+            xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                data: date
+            },
+            yAxis: {
+                name: "数量(个)",
+                boundaryGap: [0, '50%'],
+                type: 'value'
+            },
+            series: [
+                {
+                    name:'弹幕量',
+                    type:'line',
+                    smooth:true,
+                    symbol: 'none',
+                    stack: 'a',
+                    areaStyle: {
+                        normal: {}
+                    },
+                    data: data
+                }
+            ],
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    animation: false
+                },
+                formatter: function (params) {
+                    return params[0].name + '<br />' + params[0].value;
+                }
+            },
+            dataZoom: [
+                {
+                    show: true,
+                    realtime: true,
+                    start: 30,
+                    end: 70,
+                    xAxisIndex: [0, 1]
+                },
+                {
+                    type: 'inside',
+                    realtime: true,
+                    start: 30,
+                    end: 70,
+                    xAxisIndex: [0, 1]
+                }
+            ]
+        };
+
+        app.timeTicket = setInterval(function () {
+            addData(true);
+            myChart.setOption({
+                xAxis: {
+                    data: date
+                },
+                series: [{
+                    name:'弹幕量',
+                    data: data
+                }]
+            });
+        }, 6000);;
+        if (option && typeof option === "object") {
+            var startTime = +new Date();
+            myChart.setOption(option, true);
+            var endTime = +new Date();
+            var updateTime = endTime - startTime;
+            console.log("Time used:", updateTime);
+        } 
+        
+    </script>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" http-equiv="Access-Control-Allow-Origin" content="*.json">
+	<script src="echarts.min.js" type="text/javascript"></script>
+    <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.2.3.min.js" type="text/javascript"></script>
+</head>
+<body>
+	<!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="container" style="width: 600px;height:400px;"></div>
+    <br>
+    <div id="flowmonitor" style="width: 600px;height:400px;"></div>
+    <script type="text/javascript" >
+        var dom = document.getElementById("container");
+        var myChart = echarts.init(dom);
+        var jsondata;
+        option = null;
+        var key = [];
+        var value = [];
+        
+
+        function addData() {
+            $.get( "http://localhost:8888", function( data ) {
+                jsondata = JSON.parse(data)
+                for (k in jsondata){
+                    key.push(k);
+                    value.push(jsondata[k]);
+                    option = {
+                        title : {
+                            text: '斗鱼土豪榜',
+                            subtext: '🚀排名',
+                            x:'center'
+                        },
+                        roseType: 'angle',
+                        tooltip : {
+                            trigger: 'item',
+                            formatter: "{a} <br/>{b} : {c} ({d}%)"
+                        },
+                        series : [
+                            {
+                                name: '🚀发射者',
+                                type: 'pie',
+                                radius : '55%',
+                                center: ['50%', '60%'],
+                                data:[
+                                    {value:value[0],name:key[0]},
+                                    {value:value[1],name:key[1]},
+                                    {value:value[2],name:key[2]},
+                                    {value:value[3],name:key[3]},
+                                    {value:value[4],name:key[4]},
+                                    {value:value[5],name:key[5]},
+                                    {value:value[6],name:key[6]},
+                                    {value:value[7],name:key[7]},
+                                    {value:value[8],name:key[8]},
+                                    {value:value[9],name:key[9]}
+                                ],
+                                itemStyle: {
+                                    emphasis: {
+                                        shadowBlur: 10,
+                                        shadowOffsetX: 0,
+                                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                    }
+                                }
+                            }
+                        ]
+                    };
+                    myChart.setOption(option, true);
+                }
+            });
+        }
+
+        addData();
+    </script>
+    <script type="text/javascript" >
+        var flowdom = document.getElementById("flowmonitor");
+        var flowchart = echarts.init(flowdom);
+        var app = {};
+        var flowdata;
+        var initdata;
+        flowoption = null;
+        var base = new Date();
+
+        var oneDay = 24 * 3600 * 1000;
+        var date = [];
+
+        var data = [];
+        
+
+        function addData(shift) {
+            var now = new Date();
+            now = [now.getMonth(),now.getDate(),now.getHours(), now.getMinutes()].join('-');
+            $.get( "http://localhost:8000", function( data ) {
+                flowdata = data;
+            });
+            flowdata =parseInt(flowdata)
+            date.push(now);
+            data.push(flowdata);
+            if (shift) {
+                date.shift();
+                data.shift();
+            }
+        }
+
+        function initChart(){
+            $.get("http://localhost:7000",function(data){
+                initdata =data;
+                initdata = JSON.parse(initdata);
+                for(k in initdata){
+                    flowchart.setOption({
+                        xAxis: {
+                            data: k
+                        },
+                        series: [{
+                            name:'弹幕量',
+                            data: initdata[k]
+                        }]
+                    });
+                }
+
+            });
+        }
+
+        for (var i = 1; i < 100; i++) {
+            addData();
+        }
+
+        flowoption = {
+            title: {
+                text: '🚀实时数量',
+                subtext: '🚀',
+                left: 'center'
+            },
+            xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                data: date
+            },
+            yAxis: {
+                name: "数量(个)",
+                boundaryGap: [0, '50%'],
+                type: 'value'
+            },
+            series: [
+                {
+                    name:'弹幕量',
+                    type:'line',
+                    smooth:true,
+                    symbol: 'none',
+                    stack: 'a',
+                    areaStyle: {
+                        normal: {}
+                    },
+                    data: data
+                }
+            ],
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    animation: false
+                },
+                formatter: function (params) {
+                    return params[0].name + '<br />' + params[0].value;
+                }
+            },
+            dataZoom:   
+                [
+                    {
+                        type: 'slider', 
+                        start: 10,      
+                        end: 100  
+                    }    
+                ,
+                
+                    {
+                        type: 'slider',
+                        yAxisIndex: 0,
+                        start: 99.997,
+                        end: 100
+                    }
+                ]    
+            
+            
+        };
+        initChart()
+        app.timeTicket = setInterval(function () {
+            addData(true);
+            flowchart.setOption({
+                xAxis: {
+                    data: date
+                },
+                series: [{
+                    name:'弹幕量',
+                    data: data
+                }]
+            });
+        }, 6000);;
+        if (flowoption && typeof flowoption === "object") {
+            var startTime = +new Date();
+            flowchart.setOption(flowoption, true);
+            var endTime = +new Date();
+            var updateTime = endTime - startTime;
+            console.log("Time used:", updateTime);
+        } 
+        
+    </script>
+</body>
+</html>
