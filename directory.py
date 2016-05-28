@@ -26,7 +26,7 @@ headers = {
     'Upgrade-InsecureRequests': UpgradeInsecureRequests
 }
 
-cli = MongoClient()
+cli = MongoClient(host="123.206.211.77")
 db = cli["Douyu"]
 col = db["Roominfo"]
 
@@ -78,6 +78,7 @@ def insert_info():
     pagecontent = session.get(Directory_url).text
     pagesoup = BeautifulSoup(pagecontent)
     games = pagesoup.select('a')
+    col.drop()
     for game in games:
         links = game["href"]
         gameurl = HOST + links + Qurystr
