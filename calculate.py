@@ -37,16 +37,3 @@ def giftTime(data):
         sortvalue = sorted(sortdate.iteritems(),
                            key=lambda d: d[1], reverse=True)
     return sortvalue
-
-sortsender = sortNames(senderrows, "sender_id")
-sortrecver = sortNames(recverrows, "recver_id")
-sorthour = giftTime(timerows)
-
-for item in sortsender:
-    print item[0], "送出", item[1]
-
-for item in sortrecver:
-    print item[0], "收到", item[1]
-
-for item in sorthour:
-    print item
