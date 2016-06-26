@@ -25,7 +25,7 @@ def sortNames(data, key):
             sortdata[senderkey] = 1
         else:
             sortdata[senderkey] += 1
-    sortsender = sorted(sortdata.iteritems(), key=lambda d: d[1], reverse=True)
+    sortsender = sorted(sortdata.items(), key=lambda d: d[1], reverse=True)
     return sortsender
 
 
@@ -37,7 +37,7 @@ def giftTime(data):
             sortdate[str(hour)] = 1
         else:
             sortdate[str(hour)] += 1
-        sortvalue = sorted(sortdate.iteritems(),
+        sortvalue = sorted(sortdate.items(),
                            key=lambda d: d[1], reverse=True)
     return sortvalue
 

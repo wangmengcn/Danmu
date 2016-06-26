@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # 实时获取数据库中信息，并返回给前端
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from pymongo import MongoClient
 import json
 from serverEnd import dataSender
@@ -36,8 +36,7 @@ class myHandler(BaseHTTPRequestHandler):
 
 try:
     server = HTTPServer(('', PORT_NUMBER), myHandler)
-    print 'Started httpserver on port', PORT_NUMBER
-
+    print('Started httpserver on port', PORT_NUMBER)
     server.serve_forever()
-except Exception, e:
+except Exception:
     pass
