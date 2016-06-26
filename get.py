@@ -29,7 +29,7 @@ class myHandler(BaseHTTPRequestHandler):
         result = {}
         times = 0
         while times < len(name):
-            result[str(name[times])] = value[times]
+            result[bytes(name[times],'UTF-8')] = value[times]
             times += 1
         self.wfile.write(json.dumps(result))
         return
