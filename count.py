@@ -21,5 +21,5 @@ try:
     server = HTTPServer(('', PORT_NUMBER), myHandler)
     print('Started httpserver on port', PORT_NUMBER)
     server.serve_forever()
-except Exception, e:
+except Exception:
     pass
