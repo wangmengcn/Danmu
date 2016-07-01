@@ -20,7 +20,7 @@
         
 
         function addData() {
-            $.get( "http://localhost:8888", function( data ) {
+            $.get( "http://123.206.211.77:8888", function( data ) {
                 jsondata = JSON.parse(data)
                 for (k in jsondata){
                     key.push(k);
@@ -88,7 +88,7 @@
         function addData(shift) {
             var now = new Date();
             now = [now.getMonth()+1,now.getDate(),now.getHours(), now.getMinutes()].join('-');
-            $.get( "http://localhost:8000", function( data ) {
+            $.get( "http://123.206.211.77:8000", function( data ) {
                 flowdata = data;
             });
             flowdata =parseInt(flowdata)
@@ -101,7 +101,7 @@
         }
         //从历史数据获取🚀数量
         function initChart(){
-            $.get("http://localhost:7000",function(transdata){
+            $.get("http://123.206.211.77:7000",function(transdata){
                 initdata =transdata;
                 initdata = JSON.parse(initdata);
                 array =[]
@@ -115,6 +115,7 @@
                     date.push(array[i][0]);
                     data.push(array[i][1]);
                 }
+                flowchart.hideLoading();
                 flowchart.setOption({
                     xAxis: {
                         data: date
@@ -124,8 +125,19 @@
                         data: data
                     }]
                 });
-
-            });
+                app.timeTicket = setInterval(function () {
+                    addData(false);
+                    flowchart.setOption({
+                        xAxis: {
+                            data: date
+                        },
+                        series: [{
+                            name:'弹幕量',
+                            data: data
+                            }]
+                        });
+                    }, 6000);
+            });            
         }
 
         flowoption = {
@@ -170,7 +182,7 @@
                 [
                     {
                         type: 'slider', 
-                        start: 10,      
+                        start: 99,      
                         end: 100  
                     }    
                 ,
@@ -178,26 +190,15 @@
                     {
                         type: 'slider',
                         yAxisIndex: 0,
-                        start: 50,
+                        start: 99,
                         end: 100
                     }
                 ]    
             
             
         };
+        flowchart.showLoading();
         initChart()
-        app.timeTicket = setInterval(function () {
-            addData(false);
-            flowchart.setOption({
-                xAxis: {
-                    data: date
-                },
-                series: [{
-                    name:'弹幕量',
-                    data: data
-                }]
-            });
-        }, 6000);;
         if (flowoption && typeof flowoption === "object") {
             var startTime = +new Date();
             flowchart.setOption(flowoption, true);

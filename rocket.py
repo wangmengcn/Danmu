@@ -140,7 +140,7 @@ def get_Hotroom():
     for item in hotroom:
         return item["roomid"]
 
-client = MongoClient()
+client = MongoClient(host="123.206.211.77")
 db = client["Douyu"]
 col = db["rocket"]
 chatcol = db["chatmsg"]
