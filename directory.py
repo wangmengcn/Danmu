@@ -2,14 +2,11 @@
 from bs4 import BeautifulSoup
 import re
 import requests
-import time
 from datetime import datetime
-from datetime import time as dtime
 from pymongo import MongoClient
 
 HOST = "http://www.douyu.com"
 Directory_url = "http://www.douyu.com/directory?isAjax=1"
-SinglePage = "http://www.douyu.com/directory/game/LOL?page=1&isAjax=1"
 Qurystr = "/?page=1&isAjax=1"
 
 agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.86 Safari/537.36'
@@ -44,6 +41,7 @@ def get_roominfo(data):
                     roomtitle = roomtitle.encode('utf-8')
                     roomowner = room.select("p > span")
                     roomtag = room.select("div > span")
+                    roomimg = room.a
                     roomtag = roomtag[0].string
                     date = datetime.now()
                     # now = datetime.datetime(
@@ -52,6 +50,7 @@ def get_roominfo(data):
                         zbname = roomowner[0].string
                         audience = roomowner[1].get_text()
                         audience = audience.encode('utf-8').decode('utf-8')
+                        image = roomimg.span.img["data-original"]
                         word = u"万"
                         if word in audience:
                             r = re.compile(r'(\d+)(\.?)(\d*)')
@@ -65,7 +64,8 @@ def get_roominfo(data):
                             "anchor": zbname,
                             "audience": audience,
                             "tag": roomtag,
-                            "date": date
+                            "date": date,
+                            "img" : image
                         }
                         col.insert_one(roominfo)
                     # print roomid,":",roomtitle

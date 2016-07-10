@@ -5,6 +5,8 @@ import time
 import re
 from pymongo import MongoClient
 import pymongo
+from datetime import datetime
+from broadcast import castrocket
 
 
 '''这里要注意几个变量： host port roomid gid '''
@@ -42,11 +44,16 @@ def get_rocket(data):
         rocketmsg["recver_id"] = recver_id
         rocketmsg["recver_room"] = recver_room
         rocketmsg["gift"] = gift
-        rocketmsg["date"] = time.time()
+        rocketmsg["date"] = datetime.now()
+        publishvalue = {}
+        publishvalue["sender_id"] = sender_id
+        publishvalue["recver_id"] = recver_id
+        publishvalue["recver_room"] = recver_room
+        publishvalue["gift"] = gift
         col.insert_one(rocketmsg, bypass_document_validation=False)
+        castrocket(publishvalue)
         print sender_id, "送给房间号为:", recver_room, "的", recver_id, "一个",\
-            gift, "<", time.strftime(
-                '%H-%I-%M', time.localtime(time.time())), ">"
+            gift, "<", datetime.now(), ">"
     except Exception, e:
         print "error occur:", repr(data)
     finally:
@@ -62,9 +69,13 @@ def get_chatmsg(data):
         chatmsg = {}
         chatmsg["sender_id"] = sender_id
         chatmsg["content"] = sender_content
-        chatmsg["date"] = time.time()
+        chatmsg["date"] = datetime.now()
+        publishvalue = {}
+        publishvalue["sender_id"] = sender_id
+        publishvalue["content"] = sender_content
         chatcol.insert_one(chatmsg, bypass_document_validation=False)
-        print sender_id, "said:", sender_content, "at:<", time.strftime('%H-%I-%M', time.localtime(time.time())), ">"
+        castrocket(publishvalue)
+        print sender_id, "said:", sender_content, "at:<", datetime.now(), ">"
     except Exception, e:
         print "error occur:", repr(data)
     finally:
@@ -99,22 +110,20 @@ def insert_msg(sock):
         time.sleep(1)
 
 
-
-
-
 def create_Conn():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((HOST, PORT))
     RID = get_Hotroom()
     print "当前最热房间:", RID
     LOGIN_INFO = "type@=loginreq/username@=qq_aPSMdfM5" + \
-    "/password@=1234567890123456/roomid@=" + str(RID) + "/"
+        "/password@=1234567890123456/roomid@=" + str(RID) + "/"
     print LOGIN_INFO
     JION_GROUP = "type@=joingroup/rid@=" + str(RID) + "/gid@=-9999" + "/"
     print JION_GROUP
     s.sendall(tranMsg(LOGIN_INFO))
     s.sendall(tranMsg(JION_GROUP))
     return s
+
 
 def false_Conn():
     try:
@@ -123,7 +132,7 @@ def false_Conn():
         RID = 110
         print "当前最热房间:", RID
         LOGIN_INFO = "type@=loginreq/username@=qq_aPSMdfM5" + \
-        "/password@=1234567890123456/roomid@=" + str(RID) + "/"
+            "/password@=1234567890123456/roomid@=" + str(RID) + "/"
         print LOGIN_INFO
         JION_GROUP = "type@=joingroup/rid@=" + str(RID) + "/gid@=-9999" + "/"
         print JION_GROUP
