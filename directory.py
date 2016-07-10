@@ -44,6 +44,7 @@ def get_roominfo(data):
                     roomtitle = roomtitle.encode('utf-8')
                     roomowner = room.select("p > span")
                     roomtag = room.select("div > span")
+                    roomimg = room.a
                     roomtag = roomtag[0].string
                     date = datetime.now()
                     # now = datetime.datetime(
@@ -52,6 +53,7 @@ def get_roominfo(data):
                         zbname = roomowner[0].string
                         audience = roomowner[1].get_text()
                         audience = audience.encode('utf-8').decode('utf-8')
+                        image = roomimg.span.img["data-original"]
                         word = u"万"
                         if word in audience:
                             r = re.compile(r'(\d+)(\.?)(\d*)')
@@ -65,7 +67,8 @@ def get_roominfo(data):
                             "anchor": zbname,
                             "audience": audience,
                             "tag": roomtag,
-                            "date": date
+                            "date": date,
+                            "img" : image
                         }
                         col.insert_one(roominfo)
                     # print roomid,":",roomtitle
