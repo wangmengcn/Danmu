@@ -1,4 +1,9 @@
-#-*- coding: UTF-8 -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @Date    : 2016-07-14 10:20:40
+# @Author  : Wangmengcn (eclipse_sv@163.com)
+# @Link    : https://eclipsesv.com
+# @Version : $0.1$
 # 获取实时火箭数量
 import socket
 import time
@@ -6,7 +11,9 @@ import re
 from pymongo import MongoClient
 import pymongo
 from datetime import datetime
-from broadcast import castrocket
+from broadcast import castRocket
+from broadcast import castChat
+from getGifts import getGift
 
 
 '''这里要注意几个变量： host port roomid gid '''
@@ -24,11 +31,14 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
 def tranMsg(content):
-    length = bytearray([len(content) + 9, 0x00, 0x00, 0x00])
-    code = length
-    magic = bytearray([0xb1, 0x02, 0x00, 0x00])
-    end = bytearray([0x00])
-    trscont = bytes(content.encode('utf-8'))
+    '''
+    按照斗鱼弹幕协议消息封装要发送的消息内容
+    '''
+    length = bytearray([len(content) + 9, 0x00, 0x00, 0x00])    # 第一部分： 消息长度＝（剩余部分消息长度之和也就是＋9的由来）
+    code = length                                               # 第二部分： 头部：消息长度（与第一部分一样）四个字节
+    magic = bytearray([0xb1, 0x02, 0x00, 0x00])                 # 第三部分： 消息类型 发送给斗鱼的使用[0xb1, 0x02, 0x00, 0x00]表示 四个字节
+    end = bytearray([0x00])                                     # 第四部分： 数据结尾 使用[0x00]显性表示 一个字节
+    trscont = bytes(content.encode('utf-8'))                    # 第五部分： 消息体，要发送的内容  
     return bytes(length + code + magic + trscont + end)
 
 
@@ -45,15 +55,16 @@ def get_rocket(data):
         rocketmsg["recver_room"] = recver_room
         rocketmsg["gift"] = gift
         rocketmsg["date"] = datetime.now()
+        col.insert_one(rocketmsg, bypass_document_validation=False)
         publishvalue = {}
         publishvalue["sender_id"] = sender_id
         publishvalue["recver_id"] = recver_id
         publishvalue["recver_room"] = recver_room
         publishvalue["gift"] = gift
-        col.insert_one(rocketmsg, bypass_document_validation=False)
-        castrocket(publishvalue)
+        castRocket(publishvalue)
         print sender_id, "送给房间号为:", recver_room, "的", recver_id, "一个",\
             gift, "<", datetime.now(), ">"
+        getGift(str(recver_room))
     except Exception, e:
         print "error occur:", repr(data)
     finally:
@@ -74,7 +85,7 @@ def get_chatmsg(data):
         publishvalue["sender_id"] = sender_id
         publishvalue["content"] = sender_content
         chatcol.insert_one(chatmsg, bypass_document_validation=False)
-        castrocket(publishvalue)
+        castChat(publishvalue)
         print sender_id, "said:", sender_content, "at:<", datetime.now(), ">"
     except Exception, e:
         print "error occur:", repr(data)
@@ -114,15 +125,19 @@ def create_Conn():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((HOST, PORT))
     RID = get_Hotroom()
-    print "当前最热房间:", RID
-    LOGIN_INFO = "type@=loginreq/username@=qq_aPSMdfM5" + \
-        "/password@=1234567890123456/roomid@=" + str(RID) + "/"
-    print LOGIN_INFO
-    JION_GROUP = "type@=joingroup/rid@=" + str(RID) + "/gid@=-9999" + "/"
-    print JION_GROUP
-    s.sendall(tranMsg(LOGIN_INFO))
-    s.sendall(tranMsg(JION_GROUP))
-    return s
+    if RID:
+        print "当前最热房间:", RID
+        LOGIN_INFO = "type@=loginreq/username@=qq_aPSMdfM5" + \
+            "/password@=1234567890123456/roomid@=" + str(RID) + "/"
+        print LOGIN_INFO
+        JION_GROUP = "type@=joingroup/rid@=" + str(RID) + "/gid@=-9999" + "/"   # gid=-9999指的是海量弹幕频道，不必费劲抓取
+        print JION_GROUP
+        s.sendall(tranMsg(LOGIN_INFO))
+        s.sendall(tranMsg(JION_GROUP))
+        return s
+    else:
+        time.sleep(300)
+        create_Conn()
 
 
 def false_Conn():
@@ -144,12 +159,11 @@ def false_Conn():
 
 
 def get_Hotroom():
-    hotroom = roomcol.find().limit(1).sort(
-        [("audience", pymongo.DESCENDING), ("date", pymongo.DESCENDING)])
+    hotroom = roomcol.find().sort("audience", pymongo.DESCENDING).limit(1)
     for item in hotroom:
         return item["roomid"]
 
-client = MongoClient(host="123.206.211.77")
+client = MongoClient(host='121.42.219.216')
 db = client["Douyu"]
 col = db["rocket"]
 chatcol = db["chatmsg"]

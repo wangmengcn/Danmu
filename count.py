@@ -7,7 +7,6 @@ import json
 PORT_NUMBER = 7000
 
 
-
 class myHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -15,7 +14,6 @@ class myHandler(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         value = calculate.rocketTime()
-        
         self.wfile.write(json.dumps(value))
         return
 

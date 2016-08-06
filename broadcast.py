@@ -5,4 +5,4 @@ redis = redis.StrictRedis(host='123.206.211.77',
 
 def castrocket(data):
     if data:
-        redis.publish('rocketinfo',data)
+        redis.publish('rocketinfo', data)

@@ -1,10 +1,9 @@
-#-*- coding: UTF-8 -*-
+# -*- coding: UTF-8 -*-
 # 用以统计火箭分布信息
 from pymongo import MongoClient
 import pymongo
 import time
 import datetime
-import json
 
 cli = MongoClient(host="123.206.211.77")
 db = cli["Douyu"]
